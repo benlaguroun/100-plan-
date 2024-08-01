@@ -2,7 +2,7 @@ const quotes = [
     "The only way to do great work is to love what you do. - Steve Jobs",
     "Success is not the key to happiness. Happiness is the key to success. - Albert Schweitzer",
     "It always seems impossible until it’s done. - Nelson Mandela",
-    // Add more quotes up to 100
+    // Add more quotes as needed
 ];
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function initializeActions() {
         let initialActions = [];
         for (let i = 0; i < 100; i++) {
-            initialActions.push({ positive: 0, negative: 0 });
+            initialActions.push({ action: null }); // null indicates no action yet
         }
         localStorage.setItem("habitActions", JSON.stringify(initialActions));
         return initialActions;
@@ -27,9 +27,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function calculateDayPercentage(dayIndex) {
         const dayActions = actions[dayIndex];
-        const total = dayActions.positive + dayActions.negative;
-        if (total === 0) return 0;
-        return (dayActions.positive / total) * 100;
+        if (dayActions.action === null) return 0;
+        return dayActions.action === "positive" ? 100 : 0;
     }
 
     function updateWeekProgress(weekIndex) {
@@ -38,15 +37,16 @@ document.addEventListener("DOMContentLoaded", function() {
         for (let i = 0; i < 7; i++) {
             const dayIndex = weekIndex * 7 + i;
             if (dayIndex < actions.length) {
-                positive += actions[dayIndex].positive;
-                total += actions[dayIndex].positive + actions[dayIndex].negative;
+                if (actions[dayIndex].action === "positive") positive++;
+                if (actions[dayIndex].action !== null) total++;
             }
         }
         return total === 0 ? 0 : (positive / total) * 100;
     }
 
     function renderCalendar() {
-        calendarElement.innerHTML = "";
+        calendarElement.innerHTML = ""; // Clear the calendar
+
         for (let week = 0; week < Math.ceil(actions.length / 7); week++) {
             const weekCard = document.createElement("div");
             weekCard.classList.add("week-card");
@@ -75,17 +75,25 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 const greenBox = document.createElement("div");
                 greenBox.classList.add("green-box");
+                greenBox.innerHTML = actions[dayIndex].action === "positive" ? "✔" : "";
                 greenBox.addEventListener("click", function () {
-                    actions[dayIndex].positive++;
-                    updateDay(dayIndex);
+                    if (actions[dayIndex].action === null) {
+                        actions[dayIndex].action = "positive";
+                        saveActions();
+                        renderCalendar();
+                    }
                 });
                 actionButtons.appendChild(greenBox);
 
                 const redBox = document.createElement("div");
                 redBox.classList.add("red-box");
+                redBox.innerHTML = actions[dayIndex].action === "negative" ? "✔" : "";
                 redBox.addEventListener("click", function () {
-                    actions[dayIndex].negative++;
-                    updateDay(dayIndex);
+                    if (actions[dayIndex].action === null) {
+                        actions[dayIndex].action = "negative";
+                        saveActions();
+                        renderCalendar();
+                    }
                 });
                 actionButtons.appendChild(redBox);
 
@@ -93,7 +101,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 const dayPercentage = document.createElement("div");
                 dayPercentage.classList.add("day-percentage");
-                dayPercentage.textContent = `${calculateDayPercentage(dayIndex).toFixed(2)}%`;
+                dayPercentage.textContent = `${calculateDayPercentage(dayIndex)}%`;
 
                 dayContainer.appendChild(dayLabel);
                 dayContainer.appendChild(dayPercentage);
@@ -107,30 +115,42 @@ document.addEventListener("DOMContentLoaded", function() {
             weekProgressElement.classList.add("week-progress");
             weekCard.appendChild(weekProgressElement);
 
+            const resetButton = document.createElement("button");
+            resetButton.textContent = "Reset Week";
+            resetButton.classList.add("reset-button");
+            resetButton.addEventListener("click", function () {
+                resetWeek(week);
+            });
+            weekCard.appendChild(resetButton);
+
             calendarElement.appendChild(weekCard);
         }
+
         updateTotalProgress();
     }
 
-    function updateDay(dayIndex) {
+    function updateTotalProgress() {
+        const totalProgress = actions.reduce((sum, day) => sum + (day.action === "positive" ? 1 : 0), 0);
+        totalProgressElement.textContent = ((totalProgress / actions.length) * 100).toFixed(2);
+    }
+
+    function resetWeek(weekIndex) {
+        for (let i = 0; i < 7; i++) {
+            const dayIndex = weekIndex * 7 + i;
+            if (dayIndex < actions.length) {
+                actions[dayIndex].action = null;
+            }
+        }
         saveActions();
         renderCalendar();
     }
 
-    function updateTotalProgress() {
-        let totalPositive = 0;
-        let totalActions = 0;
-        actions.forEach(day => {
-            totalPositive += day.positive;
-            totalActions += day.positive + day.negative;
-        });
-        const totalProgress = totalActions === 0 ? 0 : (totalPositive / totalActions) * 100;
-        totalProgressElement.textContent = totalProgress.toFixed(2);
-
-        // Update the motivational quote
-        const dayIndex = Math.floor(totalActions / 7); // or a different logic
-        quoteElement.textContent = quotes[dayIndex < quotes.length ? dayIndex : quotes.length - 1];
+    function displayRandomQuote() {
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        quoteElement.textContent = randomQuote;
     }
 
     renderCalendar();
+    displayRandomQuote();
+    setInterval(displayRandomQuote, 60000); // Change quote every minute
 });
