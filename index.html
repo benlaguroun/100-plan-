@@ -7,19 +7,18 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
+    <div id="title">
         <h1>100-Day Habit Tracker</h1>
-        <p class="description">Track your progress and stay motivated!</p>
-        <div id="calendar">
-            <!-- Weeks will be dynamically generated here -->
+    </div>
+    <div id="header">
+        <div id="total-progress-container">
+            <span>Total Progress: <span id="total-progress">0</span>%</span>
         </div>
-        <div class="quote-section">
-            <p id="quote">"The only way to do great work is to love what you do." - Steve Jobs</p>
-        </div>
-        <div class="overall-progress">
-            <p>Total Progress: <span id="total-progress">0</span>%</p>
+        <div id="quote-container">
+            <span id="quote"></span>
         </div>
     </div>
+    <div id="calendar"></div>
     <script src="script.js"></script>
 </body>
 </html>
